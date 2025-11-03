@@ -1,0 +1,3 @@
+[submodule "service_program"]
+	path = service_program
+	url = git@github.com:AlexanderJarnstrom/service_program.git

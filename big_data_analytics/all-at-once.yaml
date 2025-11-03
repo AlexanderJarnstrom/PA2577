@@ -1,0 +1,52 @@
+# Docker Compose for All-At-Once Code Clone Detection
+
+services:
+  clone-detector:
+    image: cljdetector
+    command: clean
+    networks: 
+      - clones
+    ports:
+      - 8080:3000
+    volumes:
+      - ./Containers/cljdetector:/usr/src/app
+      - qc-volume:/QualitasCorpus
+    environment:
+      DBHOST: dbstorage
+      SOURCEDIRtest: "/usr/src/app/test/data"
+      SOURCEDIReclipse: "/QualitasCorpus/QualitasCorpus-20130901r/Systems/eclipse_SDK"
+      SOURCEDIR: "/QualitasCorpus"
+      CHUNKSIZE: 20
+    depends_on:
+      dbstorage:
+        condition: service_healthy
+
+  dbstorage:
+    image: mongo
+    restart: always
+    command: --quiet --syslog
+    networks: 
+      - clones
+    ports:
+      - 27017:27017
+    expose:
+      - "27017"
+    volumes:
+      - dbstorage:/data/db
+      - dbconfig:/data/configdb
+    healthcheck:
+      test: ["CMD", "echo", "db.runCommand(\"ping\").ok", "|", "mongosh", "http://localhost:27017", "--quiet"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+   
+networks:
+  clones:
+    driver: bridge
+volumes:
+  dbstorage:
+  dbconfig:
+  qc-volume:
+    external: true
+    
